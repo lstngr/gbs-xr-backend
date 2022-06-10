@@ -78,3 +78,72 @@ def save_data(
                     da.store(data_frame, dset)
 
     return filenames
+
+
+def _name_matches_metadata(name):
+    return name.startswith("coord") or name == "time"
+
+
+def _assert_same_or_none(value, other):
+    if value is None:
+        return other
+    if value != other:
+        msg = "Inputs do not match."
+        raise AssertionError(msg)
+    return value
+
+
+def read_data(*filenames):
+    """
+    Reads a list of filenames and extracts dataset locations
+
+    The provided files are opened, checked for compatibility, and parsed for
+    their stored data. The coordinates associated to this data are returned as
+    a dictionnary object. The data itself is sorted and returned as strings
+    describing where the data can be loaded from.
+
+    Parameters
+    ----------
+    *filenames : str
+        A list of paths to read the data from.
+
+    Returns
+    -------
+    coords : dict
+        A dictionnary mapping dimension names with a coordinate array, in the
+        same fashion as those used in xarray.
+    data_list : list
+        A list with the same length as the number of frames that were found.
+        Each item contains the name of the data file in which the frame is
+        stored, as well as a dataset name.
+    """
+    if not len(filenames) > 0:
+        msg = "Pass at least one filename."
+        raise AttributeError(msg)
+
+    _frame_shape = None
+    _times = np.array([])
+    data_list = []
+    for filename in filenames:
+        with h5py.File(filename, "r") as hfile:
+            frame_names = [dset for dset in hfile if not _name_matches_metadata(dset)]
+            for dset in frame_names:
+                try:
+                    _frame_shape = _assert_same_or_none(_frame_shape, hfile[dset].shape)
+                except AssertionError:
+                    msg = "File contains heterogeneously sized frames."
+                    raise ValueError(msg)
+
+                data_list.append((filename, dset))
+
+            # Read coordinates, overwrite everytime so we only keep the ones
+            # from the last filename
+            coord_names = [dset for dset in hfile if dset not in frame_names]
+            coords = {
+                cname: hfile[cname][:] for cname in coord_names if cname != "time"
+            }
+            _times = np.append(_times, hfile["time"])
+
+    coords["time"] = _times
+
+    return coords, data_list

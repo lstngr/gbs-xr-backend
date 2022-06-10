@@ -11,3 +11,7 @@ filenames = xrtoy.save_data(
 )
 
 print(filenames)
+
+# Read the data
+coords, frames = xrtoy.read_data(*filenames)
+print(coords, frames)
