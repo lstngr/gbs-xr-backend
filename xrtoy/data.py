@@ -1,6 +1,7 @@
 import dask.array as da
 import h5py
 import numpy as np
+from natsort import natsorted
 
 
 def save_data(
@@ -127,6 +128,7 @@ def read_data(*filenames):
     for filename in filenames:
         with h5py.File(filename, "r") as hfile:
             frame_names = [dset for dset in hfile if not _name_matches_metadata(dset)]
+            frame_names = natsorted(frame_names)  # make sure the keys are sorted
             for dset in frame_names:
                 try:
                     _frame_shape = _assert_same_or_none(_frame_shape, hfile[dset].shape)
