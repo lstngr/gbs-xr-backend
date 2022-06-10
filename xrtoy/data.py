@@ -68,10 +68,11 @@ def save_data(
                     hfile.create_dataset(str(time), data=data_frame)
                 else:
                     data_frame = da.random.random(frame_shape)
+                    chunks = tuple(v for lst in data_frame.chunks for v in lst)
                     dset = hfile.create_dataset(
                         str(time),
                         shape=data_frame.shape,
-                        chunks=data_frame.chunks,
+                        chunks=chunks,
                         dtype="f8",
                     )
                     da.store(data_frame, dset)
