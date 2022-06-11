@@ -81,6 +81,10 @@ def save_data(
     return filenames
 
 
+def _is_valid_xrt_file(filename):
+    return filename.endswith(".xrt")
+
+
 def _name_matches_metadata(name):
     return name.startswith("coord") or name == "time"
 
@@ -103,6 +107,10 @@ def read_data(*filenames):
     a dictionnary object. The data itself is sorted and returned as strings
     describing where the data can be loaded from.
 
+    In the output, the datasets within one file are sorted by time. However,
+    the order in which the files are passed to the function affects the order
+    of the output.
+
     Parameters
     ----------
     *filenames : str
@@ -118,6 +126,7 @@ def read_data(*filenames):
         Each item contains the name of the data file in which the frame is
         stored, as well as a dataset name.
     """
+    filenames = [f for f in filenames if _is_valid_xrt_file(f)]
     if not len(filenames) > 0:
         msg = "Pass at least one filename."
         raise AttributeError(msg)
