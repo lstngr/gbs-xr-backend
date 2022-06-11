@@ -1,3 +1,5 @@
+import xarray as xr
+
 import xrtoy
 
 # Generate data
@@ -15,3 +17,7 @@ print(filenames)
 # Read the data
 coords, frames = xrtoy.read_data(*filenames)
 print(coords, frames)
+
+# Load the data with xarray
+ds = xr.open_mfdataset(filenames, engine="xrtbasic")
+print(ds)
